@@ -68,26 +68,87 @@ void release_resources(int customer_num, int release[])
                 return ;
             }
         }
+        printf("The resources were correctly released.\n");
     }
     else{
         printf("The customer number is invalid, we only have %d customers.\n",NC);
         }
 }
 
-void in()
+int request_resources(int customer_num, int request[])
 {
+    int temp[NR];
+    for(int i = 0; i<NR; i++)
+        temp[i] = available[i];
+    for(int t = 0; t<NR ;t++){
+        if(request[t] > need[customer_num][t])
+            return -1;
+    }
+    for(int g = 0; g<NR ;g++)
+        if(request[g] > available[g])
+            return -1;
+    for(int b = 0; b<NR; b++)
+        available[b] -= request[b];
+    for(int h = 0; h<NR; h++)
+        allocation[customer_num][h] += request[h];
+    for(int p = 0; p<NR; p++)
+        need[customer_num][p] -= request[p];
+    if(is_safe() == 0){
+        for(int n = 0; n<NR; n++)
+            available[n] = temp[n];
+        return -1;
+    }
+    return 0;
+}
+
+
+void in(){
+
   char array[4];
   int nums[NR +1 ];
   while(1){
+    for(int f = 0; f<NC; f++)
+        for(int c = 0; c<NR; c++)
+            need[f][c] = maximum[f][c] - allocation[f][c];
     printf("Hello:\n");
     scanf("%s",array);
     for(int i = 0; i<= NR; i++)
-      scanf("%d", &nums[i]);
+        scanf("%d", &nums[i]);
     printf("%s\n",array);
     for(int j = 0; j<= NR; j++)
-      printf("%d\n",nums[j]);
-/*     if( (strcmp(array, "RQ")) == 0)
-      printf("hay deadlock\n");
-    else printf("Hola\n"); */
+        printf("%d\n",nums[j]);
+    if( (strcmp(array, "RQ")) == 0)
+        if(request_resources(nums[0],&nums[1]) == -1)
+            printf("Unable to allocate resources, the customer %d must wait until resources become available.\n", nums[0]);
+        else if(request_resources(nums[0],&nums[1]) == 0)
+            printf("Allocation was successful!\n");
+    else if( (strcmp(array, "RL")) == 0)
+        release_resources(nums[0],&nums[1]);
+
   }
+}
+
+
+int is_safe()
+{
+    int Work[NR]; 
+    for(int i = 0; i<NR; i++)
+        Work[i] = available[i];
+    int Finish[NC] = {0};
+    for(int i = 0; i<NC; i++)
+        for(int t = 0; t<NR ;t++){
+            if(need[i][t]> Work[t])
+                break;
+            if(t == NR-1 && (Finish[t]) == 0){
+                for(int j = 0; j<NR; j++)
+                    Work[j] += allocation[i][j];
+                Finish[t] = 1; 
+            }
+            else{ 
+                for(int w = 0; w<NC; w++)
+                    Finish[w] = 1;
+                return 1;
+            }
+        }
+    return 0;
 }
