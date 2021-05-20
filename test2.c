@@ -17,9 +17,12 @@ int allocation[NC][NR];
 int need[NC][NR];
 
 int request_resources(int customer_num, int request[]);
+void print_available(int arr[]);
+void print_matrix(int arr[NC][NR]);
 void release_resources(int customer_num, int release[]);
-
+int is_safe();
 void fileRead(FILE *fp, char * filename);
+void in();
 
 int main(int argc, char *argv[])
 {
@@ -31,6 +34,7 @@ int main(int argc, char *argv[])
         printf("%d\n",available[j]);
     FILE *fp;
     fileRead(fp, "in.txt");
+    in();
     return 0;
 
 }
@@ -60,8 +64,10 @@ void release_resources(int customer_num, int release[])
 {
     if(customer_num<NC){
         for(int w = 0; w<NR; w++){
-            if(allocation[customer_num][w]>= release[w])
+            if(allocation[customer_num][w]>= release[w]){
                 allocation[customer_num][w] -= release[w];
+                available[w] += release[w];
+            }
             else{
                 printf("You want to release %d resources of type %d.\n",release[w], w + 1);
                 printf("But can't do that, the customer %d only has %d resource(s) of type %d\n", customer_num, allocation[customer_num][w], w +1);
@@ -104,51 +110,81 @@ int request_resources(int customer_num, int request[])
 
 void in(){
 
-  char array[4];
+  char array[3];
   int nums[NR +1 ];
   while(1){
     for(int f = 0; f<NC; f++)
         for(int c = 0; c<NR; c++)
             need[f][c] = maximum[f][c] - allocation[f][c];
-    printf("Hello:\n");
+    printf("Que necesitas:\n");
     scanf("%s",array);
-    for(int i = 0; i<= NR; i++)
-        scanf("%d", &nums[i]);
-    printf("%s\n",array);
-    for(int j = 0; j<= NR; j++)
-        printf("%d\n",nums[j]);
-    if( (strcmp(array, "RQ")) == 0)
-        if(request_resources(nums[0],&nums[1]) == -1)
-            printf("Unable to allocate resources, the customer %d must wait until resources become available.\n", nums[0]);
-        else if(request_resources(nums[0],&nums[1]) == 0)
-            printf("Allocation was successful!\n");
-    else if( (strcmp(array, "RL")) == 0)
-        release_resources(nums[0],&nums[1]);
+    if( (strcmp(array, "*")) != 0){
+        for(int i = 0; i<= NR; i++)
+            scanf("%d", &nums[i]);
+        printf("%s\n",array);
+        for(int j = 0; j<= NR; j++)
+            printf("%d\n",nums[j]);
+        if( (strcmp(array, "RQ")) == 0)
+            if(request_resources(nums[0],&nums[1]) == -1)
+                printf("Unable to allocate resources, the customer %d must wait until resources become available.\n", nums[0]);
+            else if(request_resources(nums[0],&nums[1]) == 0)
+                printf("Allocation was successful!\n");
+        else if( (strcmp(array, "RL")) == 0)
+            release_resources(nums[0],&nums[1]);
+    }
+    else if( (strcmp(array, "*")) == 0){
+        printf("Available: \n");
+        print_available(available);
+        printf("Maximum: \n");
+        print_matrix(maximum);
+        printf("Allocation: \n");
+        print_matrix(allocation);
+        printf("Need: \n");
+        print_matrix(need);
+    }
+
 
   }
 }
 
+void print_available(int arr[])
+{
+    for(int i = 0; i<NR; i++)
+        printf("%d\t",arr[i]);
+    printf("\n");
 
+}
+void print_matrix(int arr[NC][NR])
+{
+    for(int j = 0; j<NC; j++){
+        for(int i = 0; i<NR; i++)
+            printf("%d\t",arr[j][i]);
+        printf("\n");
+    }
+}
 int is_safe()
 {
     int Work[NR]; 
     for(int i = 0; i<NR; i++)
         Work[i] = available[i];
     int Finish[NC] = {0};
-    for(int i = 0; i<NC; i++)
+    for(int i = 0; i<NC; i++){
         for(int t = 0; t<NR ;t++){
-            if(need[i][t]> Work[t])
+            if(Finish[i] == 1)
                 break;
-            if(t == NR-1 && (Finish[t]) == 0){
-                for(int j = 0; j<NR; j++)
-                    Work[j] += allocation[i][j];
-                Finish[t] = 1; 
-            }
-            else{ 
-                for(int w = 0; w<NC; w++)
-                    Finish[w] = 1;
-                return 1;
-            }
+            else if(need[i][t] <= Work[t])
+                if(t == NR-1){
+                    for(int j = 0; j<NR; j++)
+                        Work[j] += allocation[i][j];
+                    Finish[i] = 1; 
+                    i = 0;
+                    break;
+                }
+            else break;
         }
-    return 0;
+    }
+    for(int a = 0; a<NC; a++)
+        if(Finish[a] == 0)
+            return 0;
+    return 1;
 }
