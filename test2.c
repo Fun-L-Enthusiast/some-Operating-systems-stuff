@@ -26,12 +26,12 @@ void in();
 
 int main(int argc, char *argv[])
 {
-    printf("%d\n",argc-1);
+    //printf("%d\n",argc-1);
         for(int i =1; i<= argc-1; i++){
-        available[i-1] = atoi(argv[i]);
+            available[i-1] = atoi(argv[i]);
         }
-        for(int j= 0; j<NR;j++)
-        printf("%d\n",available[j]);
+/*         for(int j= 0; j<NR;j++)
+            printf("%d\n",available[j]); */
     FILE *fp;
     fileRead(fp, "in.txt");
     in();
@@ -53,11 +53,11 @@ void fileRead(FILE *fp, char * filename)
                     fscanf(fp, "%d,",&maximum[i][j]);
             }
     }
-    for(int r = 0; r< NC; r++){
+/*     for(int r = 0; r< NC; r++){
         for(int q = 0; q<NR; q++)
             printf("%d\t",maximum[r][q]);
         printf("\n");
-    }
+    } */
 }
 
 void release_resources(int customer_num, int release[])
@@ -83,9 +83,14 @@ void release_resources(int customer_num, int release[])
 
 int request_resources(int customer_num, int request[])
 {
-    int temp[NR];
-    for(int i = 0; i<NR; i++)
-        temp[i] = available[i];
+    int temp_available[NR];
+    int temp_allocation[NR];
+    int temp_need[NR];
+    for(int i = 0; i<NR; i++){
+        temp_available[i] = available[i];
+        temp_allocation[i] = allocation[customer_num][i];
+        temp_need[i] = need[customer_num][i];
+    }
     for(int t = 0; t<NR ;t++){
         if(request[t] > need[customer_num][t])
             return -1;
@@ -93,15 +98,18 @@ int request_resources(int customer_num, int request[])
     for(int g = 0; g<NR ;g++)
         if(request[g] > available[g])
             return -1;
-    for(int b = 0; b<NR; b++)
+    for(int b = 0; b<NR; b++){
         available[b] -= request[b];
-    for(int h = 0; h<NR; h++)
-        allocation[customer_num][h] += request[h];
-    for(int p = 0; p<NR; p++)
-        need[customer_num][p] -= request[p];
+        allocation[customer_num][b] += request[b];
+        need[customer_num][b] -= request[b];
+    }
     if(is_safe() == 0){
-        for(int n = 0; n<NR; n++)
-            available[n] = temp[n];
+        for(int n = 0; n<NR; n++){
+            available[n] = temp_available[n];
+            allocation[customer_num][n] = temp_allocation[n];
+            need[customer_num][n] = temp_need[n];
+        }
+        printf("No estas a salvo xD.\n");
         return -1;
     }
     return 0;
@@ -121,13 +129,14 @@ void in(){
     if( (strcmp(array, "*")) != 0){
         for(int i = 0; i<= NR; i++)
             scanf("%d", &nums[i]);
-        printf("%s\n",array);
-        for(int j = 0; j<= NR; j++)
-            printf("%d\n",nums[j]);
+        //printf("%s\n",array);
+/*         for(int j = 0; j<= NR; j++)
+            printf("%d\n",nums[j]); */
         if( (strcmp(array, "RQ")) == 0)
             if(request_resources(nums[0],&nums[1]) == -1)
                 printf("Unable to allocate resources, the customer %d must wait until resources become available.\n", nums[0]);
-            else if(request_resources(nums[0],&nums[1]) == 0)
+            //else if(request_resources(nums[0],&nums[1]) == 0)
+            else
                 printf("Allocation was successful!\n");
         else if( (strcmp(array, "RL")) == 0)
             release_resources(nums[0],&nums[1]);
@@ -164,6 +173,7 @@ void print_matrix(int arr[NC][NR])
 }
 int is_safe()
 {
+    //0 es falso xD
     int Work[NR]; 
     for(int i = 0; i<NR; i++)
         Work[i] = available[i];
@@ -172,7 +182,7 @@ int is_safe()
         for(int t = 0; t<NR ;t++){
             if(Finish[i] == 1)
                 break;
-            else if(need[i][t] <= Work[t])
+            else if(need[i][t] <= Work[t]){
                 if(t == NR-1){
                     for(int j = 0; j<NR; j++)
                         Work[j] += allocation[i][j];
@@ -180,6 +190,7 @@ int is_safe()
                     i = 0;
                     break;
                 }
+            }
             else break;
         }
     }
